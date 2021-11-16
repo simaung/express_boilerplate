@@ -1,17 +1,33 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import Users from '../models/userModel.js';
+import { v4 as uuidv4 } from 'uuid';
 
 export const getUsers = async(req, res) => {
     try {
         const users = await Users.findAll({
             attributes: {
-                exclude: ['password', 'refresh_token']
+                exclude: ['id', 'password', 'refresh_token']
             }
         });
         res.json(users);
     } catch (error) {
         console.log(error)
+    }
+}
+
+export const getUser = async(req, res) => {
+    try {
+        const user = await Users.findOne({
+            where: { uuid: req.params.id },
+            attributes: {
+                exclude: ['id', 'password', 'refresh_token']
+            }
+        });
+        if (!user) return res.status(404).json({ message: "User doesn't exist" });
+        res.json(user);
+    } catch (error) {
+        console.log(error);
     }
 }
 
@@ -29,6 +45,7 @@ export const register = async(req, res) => {
 
         try {
             await Users.create({
+                uuid: uuidv4(),
                 name: name,
                 email: email,
                 password: hashPassword
